@@ -63,28 +63,19 @@ public class RemoveHeadersOnceFilter extends OncePerRequestFilter {
   @Override
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
     HttpServletResponseWrapper responseWrapper = new HttpServletResponseWrapper(response) {
-      /**
-       * Set of headers that already added.
-       */
-      private Set<String> dedupHeaders = new HashSet<>();
 
       @Override
       public void setHeader(String name, String value) {
         boolean ignoreHeader = false;
         String headerName = name.toLowerCase();
         LOGGER.trace("Setting header '{}' to value '{}'.", name, value);
-        // Check if header should be ignored if mentioned more than once
+        // Check if header should be ignored
         if (searchConfiguration.getHeadersLowerCase().contains(headerName)) {
           LOGGER.trace("Header '{}' is in deduplication list.", name);
-          if (dedupHeaders.contains(headerName)) {
-            LOGGER.trace("Header '{}' is already set --> ignore header.", name);
-            ignoreHeader = true;
-          } else {
-            dedupHeaders.add(headerName);
-          }
-          if (!ignoreHeader) {
-            super.setHeader(name, value);
-          }
+          ignoreHeader = true;
+        }
+        if (!ignoreHeader) {
+          super.setHeader(name, value);
         }
       }
 
